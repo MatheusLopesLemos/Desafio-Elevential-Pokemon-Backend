@@ -1,7 +1,48 @@
 import prisma from '../config/dbConfig.js';
 import { getPokemonMedia } from '../services/pokeApiService.js';
+import { pokemonSchema } from '../schemas/pokemonSchema.js';
 
-// Listar todos os pokémons com tipos incluídos e imagem
+export async function buscarPokemonsPorTipo(req, res) {
+  const tipo = Number(req.query.tipo); // tipo vindo da query param
+
+  if (!tipo || isNaN(tipo)) {
+    return res.status(400).json({ message: 'Informe o tipo como um número válido' });
+  }
+
+  try {
+    const pokemons = await prisma.pokemon.findMany({
+      where: {
+        OR: [
+          { tipoPrincipalCodigo: tipo },
+          { tipoSecundarioCodigo: tipo },
+        ],
+      },
+      include: {
+        tipoPrincipal: true,
+        tipoSecundario: true,
+      },
+    });
+
+    if (pokemons.length === 0) {
+      return res.status(404).json({ message: 'Nenhum Pokémon encontrado para este tipo' });
+    }
+
+    // Adiciona mídia (imagem, miniatura, gif)
+    const pokemonsComMidia = await Promise.all(
+      pokemons.map(async (pokemon) => {
+        const { image, thumbnail, gif } = await getPokemonMedia(pokemon.nome);
+        return { ...pokemon, imagem: image, miniatura: thumbnail, gif };
+      })
+    );
+
+    return res.json(pokemonsComMidia);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Erro ao buscar pokémons' });
+  }
+}
+
+// Listar todos os pokémons com tipos incluídos e mídia (imagem, miniatura, gif)
 export async function listarPokemons(req, res) {
   try {
     const pokemons = await prisma.pokemon.findMany({
@@ -30,9 +71,12 @@ export async function listarPokemons(req, res) {
   }
 }
 
-// Buscar pokémon por código com imagem
-export async function buscarPokemonPorCodigo(req, res) {
+// Buscar pokémon por código com mídia (imagem, miniatura, gif)
+export const buscarPokemonPorCodigo = async (req, res) => {
   const codigo = Number(req.params.codigo);
+  if (!codigo || isNaN(codigo)) {
+    return res.status(400).json({ message: 'Código inválido ou não informado' });
+  }
 
   try {
     const pokemon = await prisma.pokemon.findUnique({
@@ -47,24 +91,24 @@ export async function buscarPokemonPorCodigo(req, res) {
       return res.status(404).json({ message: 'Pokémon não encontrado' });
     }
 
-    const imageUrl = await getPokemonImage(pokemon.nome);
-
-    res.json({ ...pokemon, imagem: imageUrl });
+    res.json(pokemon);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Erro ao buscar pokémon' });
+    res.status(500).json({ message: 'Erro ao buscar Pokémon' });
   }
-}
+};
 
-// Criar novo pokémon com código gerado automaticamente
+
+// Criar novo pokémon com código gerado automaticamente e validação com Zod
 export async function criarPokemon(req, res) {
-  const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = req.body;
-
-  if (typeof tipoPrincipalCodigo === 'undefined') {
-    return res.status(400).json({ message: 'tipoPrincipalCodigo é obrigatório' });
-  }
-
   try {
+    const parsed = pokemonSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ errors: parsed.error.flatten() });
+    }
+
+    const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = parsed.data;
+
     // Buscar tipos pelo código
     const tipoPrincipal = await prisma.tipo.findUnique({
       where: { codigo: tipoPrincipalCodigo },
@@ -107,25 +151,27 @@ export async function criarPokemon(req, res) {
       },
     });
 
-    const imageUrl = await getPokemonImage(novoPokemon.nome);
+    const { image, thumbnail, gif } = await getPokemonMedia(novoPokemon.nome);
 
-    res.status(201).json({ ...novoPokemon, imagem: imageUrl });
+    res.status(201).json({ ...novoPokemon, imagem: image, miniatura: thumbnail, gif: gif });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao criar pokémon' });
   }
 }
 
-// Atualizar pokémon por código
+// Atualizar pokémon por código com validação Zod e mídia
 export async function atualizarPokemon(req, res) {
   const codigo = Number(req.params.codigo);
-  const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = req.body;
-
-  if (typeof tipoPrincipalCodigo === 'undefined') {
-    return res.status(400).json({ message: 'tipoPrincipalCodigo é obrigatório' });
-  }
 
   try {
+    const parsed = pokemonSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ errors: parsed.error.flatten() });
+    }
+
+    const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = parsed.data;
+
     // Buscar tipos pelo código
     const tipoPrincipal = await prisma.tipo.findUnique({
       where: { codigo: tipoPrincipalCodigo },
@@ -154,7 +200,7 @@ export async function atualizarPokemon(req, res) {
         },
         tipoSecundario: tipoSecundario
           ? { connect: { codigo: tipoSecundario.codigo } }
-          : { disconnect: true }, // desconecta se null
+          : { disconnect: true },
       },
       include: {
         tipoPrincipal: true,
@@ -162,9 +208,9 @@ export async function atualizarPokemon(req, res) {
       },
     });
 
-    const imageUrl = await getPokemonImage(pokemonAtualizado.nome);
+    const { image, thumbnail, gif } = await getPokemonMedia(pokemonAtualizado.nome);
 
-    res.json({ ...pokemonAtualizado, imagem: imageUrl });
+    res.json({ ...pokemonAtualizado, imagem: image, miniatura: thumbnail, gif: gif });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao atualizar pokémon' });

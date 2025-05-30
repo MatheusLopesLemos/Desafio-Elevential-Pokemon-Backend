@@ -4,6 +4,7 @@ import * as pokemonControllers from '../controllers/pokemonControllers.js';
 const router = express.Router();
 
 router.get('/', pokemonControllers.listarPokemons);
+router.get('/filtrar', pokemonControllers.buscarPokemonsPorTipo);
 router.get('/:codigo', pokemonControllers.buscarPokemonPorCodigo);
 router.post('/', pokemonControllers.criarPokemon);
 router.put('/:codigo', pokemonControllers.atualizarPokemon);
