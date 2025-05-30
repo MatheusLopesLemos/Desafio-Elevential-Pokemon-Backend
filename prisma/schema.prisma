@@ -1,0 +1,36 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tipo {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  codigo Int     @unique
+  nome   String  @unique
+
+  pokemonsPrincipal  Pokemon[] @relation("TipoPrincipal")
+  pokemonsSecundario Pokemon[] @relation("TipoSecundario")
+}
+
+model Pokemon {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  codigo              Int     @unique
+  nome                String
+
+  tipoPrincipalCodigo  Int
+  tipoSecundarioCodigo Int?
+
+  tipoPrincipal       Tipo    @relation("TipoPrincipal", fields: [tipoPrincipalCodigo], references: [codigo])
+  tipoSecundario      Tipo?   @relation("TipoSecundario", fields: [tipoSecundarioCodigo], references: [codigo])
+}
