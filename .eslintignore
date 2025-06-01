@@ -1,0 +1,15 @@
+# Ignorar arquivos e pastas comuns
+node_modules/
+dist/
+build/
+
+# Ignorar arquivos gerados pelo Prisma
+prisma/generated/
+
+# Ignorar arquivos de configuração do ambiente
+.env
+.env.local
+.env.*.local
+
+# Ignorar arquivos de logs
+*.log

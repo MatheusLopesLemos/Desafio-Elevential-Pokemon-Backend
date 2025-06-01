@@ -6,16 +6,15 @@ export async function buscarPokemonsPorTipo(req, res) {
   const tipo = Number(req.query.tipo); // tipo vindo da query param
 
   if (!tipo || isNaN(tipo)) {
-    return res.status(400).json({ message: 'Informe o tipo como um número válido' });
+    return res
+      .status(400)
+      .json({ message: 'Informe o tipo como um número válido' });
   }
 
   try {
     const pokemons = await prisma.pokemon.findMany({
       where: {
-        OR: [
-          { tipoPrincipalCodigo: tipo },
-          { tipoSecundarioCodigo: tipo },
-        ],
+        OR: [{ tipoPrincipalCodigo: tipo }, { tipoSecundarioCodigo: tipo }],
       },
       include: {
         tipoPrincipal: true,
@@ -24,7 +23,9 @@ export async function buscarPokemonsPorTipo(req, res) {
     });
 
     if (pokemons.length === 0) {
-      return res.status(404).json({ message: 'Nenhum Pokémon encontrado para este tipo' });
+      return res
+        .status(404)
+        .json({ message: 'Nenhum Pokémon encontrado para este tipo' });
     }
 
     // Adiciona mídia (imagem, miniatura, gif)
@@ -32,7 +33,7 @@ export async function buscarPokemonsPorTipo(req, res) {
       pokemons.map(async (pokemon) => {
         const { image, thumbnail, gif } = await getPokemonMedia(pokemon.nome);
         return { ...pokemon, imagem: image, miniatura: thumbnail, gif };
-      })
+      }),
     );
 
     return res.json(pokemonsComMidia);
@@ -61,7 +62,7 @@ export async function listarPokemons(req, res) {
           miniatura: thumbnail,
           gif: gif,
         };
-      })
+      }),
     );
 
     res.json(pokemonsComMidia);
@@ -75,7 +76,9 @@ export async function listarPokemons(req, res) {
 export const buscarPokemonPorCodigo = async (req, res) => {
   const codigo = Number(req.params.codigo);
   if (!codigo || isNaN(codigo)) {
-    return res.status(400).json({ message: 'Código inválido ou não informado' });
+    return res
+      .status(400)
+      .json({ message: 'Código inválido ou não informado' });
   }
 
   try {
@@ -98,7 +101,6 @@ export const buscarPokemonPorCodigo = async (req, res) => {
   }
 };
 
-
 // Criar novo pokémon com código gerado automaticamente e validação com Zod
 export async function criarPokemon(req, res) {
   try {
@@ -118,12 +120,17 @@ export async function criarPokemon(req, res) {
     }
 
     let tipoSecundario = null;
-    if (typeof tipoSecundarioCodigo !== 'undefined' && tipoSecundarioCodigo !== null) {
+    if (
+      typeof tipoSecundarioCodigo !== 'undefined' &&
+      tipoSecundarioCodigo !== null
+    ) {
       tipoSecundario = await prisma.tipo.findUnique({
         where: { codigo: tipoSecundarioCodigo },
       });
       if (!tipoSecundario) {
-        return res.status(400).json({ message: 'Tipo secundário não encontrado' });
+        return res
+          .status(400)
+          .json({ message: 'Tipo secundário não encontrado' });
       }
     }
 
@@ -153,7 +160,9 @@ export async function criarPokemon(req, res) {
 
     const { image, thumbnail, gif } = await getPokemonMedia(novoPokemon.nome);
 
-    res.status(201).json({ ...novoPokemon, imagem: image, miniatura: thumbnail, gif: gif });
+    res
+      .status(201)
+      .json({ ...novoPokemon, imagem: image, miniatura: thumbnail, gif: gif });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao criar pokémon' });
@@ -181,12 +190,17 @@ export async function atualizarPokemon(req, res) {
     }
 
     let tipoSecundario = null;
-    if (typeof tipoSecundarioCodigo !== 'undefined' && tipoSecundarioCodigo !== null) {
+    if (
+      typeof tipoSecundarioCodigo !== 'undefined' &&
+      tipoSecundarioCodigo !== null
+    ) {
       tipoSecundario = await prisma.tipo.findUnique({
         where: { codigo: tipoSecundarioCodigo },
       });
       if (!tipoSecundario) {
-        return res.status(400).json({ message: 'Tipo secundário não encontrado' });
+        return res
+          .status(400)
+          .json({ message: 'Tipo secundário não encontrado' });
       }
     }
 
@@ -208,9 +222,16 @@ export async function atualizarPokemon(req, res) {
       },
     });
 
-    const { image, thumbnail, gif } = await getPokemonMedia(pokemonAtualizado.nome);
+    const { image, thumbnail, gif } = await getPokemonMedia(
+      pokemonAtualizado.nome,
+    );
 
-    res.json({ ...pokemonAtualizado, imagem: image, miniatura: thumbnail, gif: gif });
+    res.json({
+      ...pokemonAtualizado,
+      imagem: image,
+      miniatura: thumbnail,
+      gif: gif,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao atualizar pokémon' });
@@ -227,14 +248,18 @@ export async function deletarPokemon(req, res) {
     });
 
     if (!pokemon) {
-      return res.status(404).json({ message: `Pokémon com código ${codigo} não encontrado.` });
+      return res
+        .status(404)
+        .json({ message: `Pokémon com código ${codigo} não encontrado.` });
     }
 
     await prisma.pokemon.delete({
       where: { codigo },
     });
 
-    res.status(200).json({ message: `O Pokémon "${pokemon.nome}" foi deletado com sucesso.` });
+    res.status(200).json({
+      message: `O Pokémon "${pokemon.nome}" foi deletado com sucesso.`,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao deletar pokémon' });

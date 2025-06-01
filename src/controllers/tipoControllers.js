@@ -85,12 +85,16 @@ export async function deletarTipo(req, res) {
   try {
     const tipo = await prisma.tipo.findUnique({ where: { codigo } });
     if (!tipo) {
-      return res.status(404).json({ message: `Tipo com código ${codigo} não encontrado.` });
+      return res
+        .status(404)
+        .json({ message: `Tipo com código ${codigo} não encontrado.` });
     }
 
     await prisma.tipo.delete({ where: { codigo } });
 
-    res.status(200).json({ message: `O tipo "${tipo.nome}" foi deletado com sucesso.` });
+    res
+      .status(200)
+      .json({ message: `O tipo "${tipo.nome}" foi deletado com sucesso.` });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao deletar tipo' });

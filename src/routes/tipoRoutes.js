@@ -10,4 +10,3 @@ router.put('/:codigo', tipoControllers.atualizarTipo);
 router.delete('/:codigo', tipoControllers.deletarTipo);
 
 export default router;
-

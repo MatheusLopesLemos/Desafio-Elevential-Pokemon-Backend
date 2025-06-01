@@ -1,5 +1,4 @@
-
-#  Pokémon API Backend
+# Pokémon API Backend
 
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-339933?style=flat&logo=node.js)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat&logo=express)](https://expressjs.com/)
@@ -15,7 +14,7 @@ API RESTful para gerenciamento de dados de Pokémon e Tipos, incluindo integraç
 
 ---
 
-##  O que é e como funciona
+## O que é e como funciona
 
 Esta API permite:
 
@@ -27,7 +26,7 @@ Esta API permite:
 
 ---
 
-##  Funcionalidades
+## Funcionalidades
 
 - 📋 CRUD completo para Pokémons
 - 🌈 CRUD completo para Tipos
@@ -39,7 +38,7 @@ Esta API permite:
 
 ---
 
-##  Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 - **Node.js**: Plataforma de execução
 - **Express**: Framework web
@@ -53,32 +52,32 @@ Esta API permite:
 
 ---
 
-##  Endpoints da API
+## Endpoints da API
 
-###  Pokémons
+### Pokémons
 
-| Método | Endpoint                        | Descrição                                        |
-|--------|---------------------------------|-------------------------------------------------|
-| GET    | `/pokemons`                     | Lista todos os Pokémons                         |
-| GET    | `/pokemons/:codigo`             | Busca Pokémon por código                        |
-| GET    | `/pokemons/filtrar?tipo=X`      | Filtra Pokémons por tipo principal/secundário   |
-| POST   | `/pokemons`                     | Cria um novo Pokémon                            |
-| PUT    | `/pokemons/:codigo`             | Atualiza um Pokémon                             |
-| DELETE | `/pokemons/:codigo`             | Deleta um Pokémon                               |
+| Método | Endpoint                   | Descrição                                     |
+| ------ | -------------------------- | --------------------------------------------- |
+| GET    | `/pokemons`                | Lista todos os Pokémons                       |
+| GET    | `/pokemons/:codigo`        | Busca Pokémon por código                      |
+| GET    | `/pokemons/filtrar?tipo=X` | Filtra Pokémons por tipo principal/secundário |
+| POST   | `/pokemons`                | Cria um novo Pokémon                          |
+| PUT    | `/pokemons/:codigo`        | Atualiza um Pokémon                           |
+| DELETE | `/pokemons/:codigo`        | Deleta um Pokémon                             |
 
-###  Tipos
+### Tipos
 
-| Método | Endpoint            | Descrição                       |
-|--------|---------------------|--------------------------------|
-| GET    | `/tipos`            | Lista todos os tipos de Pokémon |
-| GET    | `/tipos/:codigo`    | Busca tipo por código           |
-| POST   | `/tipos`            | Cria um novo tipo               |
-| PUT    | `/tipos/:codigo`    | Atualiza um tipo                |
-| DELETE | `/tipos/:codigo`    | Deleta um tipo                  |
+| Método | Endpoint         | Descrição                       |
+| ------ | ---------------- | ------------------------------- |
+| GET    | `/tipos`         | Lista todos os tipos de Pokémon |
+| GET    | `/tipos/:codigo` | Busca tipo por código           |
+| POST   | `/tipos`         | Cria um novo tipo               |
+| PUT    | `/tipos/:codigo` | Atualiza um tipo                |
+| DELETE | `/tipos/:codigo` | Deleta um tipo                  |
 
 ---
 
-##  Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 src/
@@ -112,7 +111,7 @@ README.md
 
 ---
 
-##  Instalação e Uso
+## Instalação e Uso
 
 Clone o repositório:
 
@@ -151,11 +150,11 @@ A API estará disponível em: `http://localhost:3000`
 
 ## 🔍 Melhorias Futuras
 
--  Docker para facilitar deployment
+- Docker para facilitar deployment
 
 ---
 
-##  Licença
+## Licença
 
 Este projeto está licenciado sob a Licença MIT.  
 Consulte o arquivo [LICENSE](./LICENSE) para mais informações.

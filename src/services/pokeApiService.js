@@ -2,7 +2,9 @@ import axios from 'axios';
 
 export async function getPokemonMedia(nome) {
   try {
-    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${nome.toLowerCase()}`);
+    const response = await axios.get(
+      `https://pokeapi.co/api/v2/pokemon/${nome.toLowerCase()}`,
+    );
     const id = response.data.id;
 
     const image = response.data.sprites.other['official-artwork'].front_default;

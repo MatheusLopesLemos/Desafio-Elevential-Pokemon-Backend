@@ -1,5 +1,4 @@
-node_modules
-dist
-build
-generated
-generated
+node_modules/
+dist/
+build/
+prisma/generated/
