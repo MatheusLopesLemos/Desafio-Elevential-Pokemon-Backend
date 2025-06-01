@@ -94,7 +94,15 @@ export const buscarPokemonPorCodigo = async (req, res) => {
       return res.status(404).json({ message: 'Pokémon não encontrado' });
     }
 
-    res.json(pokemon);
+    // Chama getPokemonMedia para obter as URLs das mídias
+    const { image, thumbnail, gif } = await getPokemonMedia(pokemon.nome);
+
+    res.json({
+      ...pokemon,
+      imagem: image,
+      miniatura: thumbnail,
+      gif: gif,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erro ao buscar Pokémon' });
