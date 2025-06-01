@@ -28,13 +28,13 @@ Esta API permite:
 
 ## Funcionalidades
 
-- 📋 CRUD completo para Pokémons
-- 🌈 CRUD completo para Tipos
-- 🔎 Busca de Pokémon por código (`codigo`)
-- 🎯 Filtro de Pokémon por tipo (principal ou secundário)
-- 🖼️ Adição de imagens e gifs aos dados dos Pokémons
-- 🛡️ Validação de entrada robusta com Zod
-- 🚀 Código organizado e modular, seguindo boas práticas
+- CRUD completo para Pokémons
+- CRUD completo para Tipos
+- Busca de Pokémon por código (`codigo`)
+- Filtro de Pokémon por tipo (principal ou secundário)
+- Adição de imagens e gifs aos dados dos Pokémons
+- Validação de entrada robusta com Zod
+- Código organizado e modular, seguindo boas práticas
 
 ---
 
