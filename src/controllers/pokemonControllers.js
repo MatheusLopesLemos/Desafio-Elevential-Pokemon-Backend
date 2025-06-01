@@ -1,9 +1,10 @@
 import prisma from '../config/dbConfig.js';
 import { getPokemonMedia } from '../services/pokeApiService.js';
 import { pokemonSchema } from '../schemas/pokemonSchema.js';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export async function buscarPokemonsPorTipo(req, res) {
-  const tipo = Number(req.query.tipo); // tipo vindo da query param
+  const tipo = Number(req.query.tipo);
 
   if (!tipo || isNaN(tipo)) {
     return res
@@ -28,7 +29,6 @@ export async function buscarPokemonsPorTipo(req, res) {
         .json({ message: 'Nenhum Pokémon encontrado para este tipo' });
     }
 
-    // Adiciona mídia (imagem, miniatura, gif)
     const pokemonsComMidia = await Promise.all(
       pokemons.map(async (pokemon) => {
         const { image, thumbnail, gif } = await getPokemonMedia(pokemon.nome);
@@ -43,7 +43,6 @@ export async function buscarPokemonsPorTipo(req, res) {
   }
 }
 
-// Listar todos os pokémons com tipos incluídos e mídia (imagem, miniatura, gif)
 export async function listarPokemons(req, res) {
   try {
     const pokemons = await prisma.pokemon.findMany({
@@ -51,6 +50,11 @@ export async function listarPokemons(req, res) {
         tipoPrincipal: true,
         tipoSecundario: true,
       },
+      // --- Adição para ordenar por código ---
+      orderBy: {
+        codigo: 'asc', // 'asc' para ordem crescente, 'desc' para decrescente
+      },
+      // ------------------------------------
     });
 
     const pokemonsComMidia = await Promise.all(
@@ -72,7 +76,6 @@ export async function listarPokemons(req, res) {
   }
 }
 
-// Buscar pokémon por código com mídia (imagem, miniatura, gif)
 export const buscarPokemonPorCodigo = async (req, res) => {
   const codigo = Number(req.params.codigo);
   if (!codigo || isNaN(codigo)) {
@@ -94,7 +97,6 @@ export const buscarPokemonPorCodigo = async (req, res) => {
       return res.status(404).json({ message: 'Pokémon não encontrado' });
     }
 
-    // Chama getPokemonMedia para obter as URLs das mídias
     const { image, thumbnail, gif } = await getPokemonMedia(pokemon.nome);
 
     res.json({
@@ -109,7 +111,6 @@ export const buscarPokemonPorCodigo = async (req, res) => {
   }
 };
 
-// Criar novo pokémon com código gerado automaticamente e validação com Zod
 export async function criarPokemon(req, res) {
   try {
     const parsed = pokemonSchema.safeParse(req.body);
@@ -117,23 +118,19 @@ export async function criarPokemon(req, res) {
       return res.status(400).json({ errors: parsed.error.flatten() });
     }
 
-    const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = parsed.data;
+    const { nome, tipoPrincipalId, tipoSecundarioId } = parsed.data;
 
-    // Buscar tipos pelo código
     const tipoPrincipal = await prisma.tipo.findUnique({
-      where: { codigo: tipoPrincipalCodigo },
+      where: { codigo: tipoPrincipalId },
     });
     if (!tipoPrincipal) {
       return res.status(400).json({ message: 'Tipo principal não encontrado' });
     }
 
     let tipoSecundario = null;
-    if (
-      typeof tipoSecundarioCodigo !== 'undefined' &&
-      tipoSecundarioCodigo !== null
-    ) {
+    if (typeof tipoSecundarioId !== 'undefined' && tipoSecundarioId !== null) {
       tipoSecundario = await prisma.tipo.findUnique({
-        where: { codigo: tipoSecundarioCodigo },
+        where: { codigo: tipoSecundarioId },
       });
       if (!tipoSecundario) {
         return res
@@ -142,13 +139,11 @@ export async function criarPokemon(req, res) {
       }
     }
 
-    // Buscar maior código atual
     const maxCodigoResult = await prisma.pokemon.aggregate({
       _max: { codigo: true },
     });
     const novoCodigo = (maxCodigoResult._max.codigo || 0) + 1;
 
-    // Criar o Pokémon
     const novoPokemon = await prisma.pokemon.create({
       data: {
         codigo: novoCodigo,
@@ -177,9 +172,8 @@ export async function criarPokemon(req, res) {
   }
 }
 
-// Atualizar pokémon por código com validação Zod e mídia
 export async function atualizarPokemon(req, res) {
-  const codigo = Number(req.params.codigo);
+  const pokemonCodigoOriginal = Number(req.params.codigo);
 
   try {
     const parsed = pokemonSchema.safeParse(req.body);
@@ -187,23 +181,46 @@ export async function atualizarPokemon(req, res) {
       return res.status(400).json({ errors: parsed.error.flatten() });
     }
 
-    const { nome, tipoPrincipalCodigo, tipoSecundarioCodigo } = parsed.data;
+    const {
+      codigo: novoCodigo,
+      nome,
+      tipoPrincipalId,
+      tipoSecundarioId,
+    } = parsed.data;
 
-    // Buscar tipos pelo código
+    const pokemonExistente = await prisma.pokemon.findUnique({
+      where: { codigo: pokemonCodigoOriginal },
+    });
+
+    if (!pokemonExistente) {
+      return res.status(404).json({
+        message: `Pokémon com código ${pokemonCodigoOriginal} não encontrado para atualização.`,
+      });
+    }
+
+    if (novoCodigo !== undefined && novoCodigo !== pokemonCodigoOriginal) {
+      const codigoDuplicado = await prisma.pokemon.findUnique({
+        where: { codigo: novoCodigo },
+      });
+
+      if (codigoDuplicado) {
+        return res.status(409).json({
+          message: `O código '${novoCodigo}' já está em uso por outro Pokémon. Por favor, escolha um código único.`,
+        });
+      }
+    }
+
     const tipoPrincipal = await prisma.tipo.findUnique({
-      where: { codigo: tipoPrincipalCodigo },
+      where: { codigo: tipoPrincipalId },
     });
     if (!tipoPrincipal) {
       return res.status(400).json({ message: 'Tipo principal não encontrado' });
     }
 
     let tipoSecundario = null;
-    if (
-      typeof tipoSecundarioCodigo !== 'undefined' &&
-      tipoSecundarioCodigo !== null
-    ) {
+    if (tipoSecundarioId !== undefined && tipoSecundarioId !== null) {
       tipoSecundario = await prisma.tipo.findUnique({
-        where: { codigo: tipoSecundarioCodigo },
+        where: { codigo: tipoSecundarioId },
       });
       if (!tipoSecundario) {
         return res
@@ -212,10 +229,10 @@ export async function atualizarPokemon(req, res) {
       }
     }
 
-    // Atualizar o Pokémon
     const pokemonAtualizado = await prisma.pokemon.update({
-      where: { codigo },
+      where: { codigo: pokemonCodigoOriginal },
       data: {
+        codigo: novoCodigo,
         nome,
         tipoPrincipal: {
           connect: { codigo: tipoPrincipal.codigo },
@@ -241,12 +258,32 @@ export async function atualizarPokemon(req, res) {
       gif: gif,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erro ao atualizar pokémon' });
+    if (error instanceof PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return res.status(404).json({
+          message: `Pokémon com código ${pokemonCodigoOriginal} não encontrado para atualização.`,
+        });
+      }
+      if (error.code === 'P2002' && error.meta?.target) {
+        if (error.meta.target.includes('nome')) {
+          return res.status(409).json({
+            message: `Já existe um Pokémon com o nome '${req.body.nome}'.`,
+          });
+        }
+        if (error.meta.target.includes('codigo')) {
+          return res.status(409).json({
+            message: `O código '${req.body.codigo}' já está em uso por outro Pokémon (erro de unicidade do banco de dados).`,
+          });
+        }
+      }
+    }
+    console.error('Erro ao atualizar Pokémon:', error);
+    res.status(500).json({
+      message: 'Ocorreu um erro interno ao tentar atualizar o Pokémon.',
+    });
   }
 }
 
-// Deletar pokémon por código
 export async function deletarPokemon(req, res) {
   const codigo = Number(req.params.codigo);
 
